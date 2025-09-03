@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 import google.generativeai as genai
+from .models import WordSearch, EtymologyResult
+from django.contrib.auth.models import User
 
 @csrf_exempt
 def analyze_word(request):
@@ -14,6 +16,13 @@ def analyze_word(request):
             
             if not word:
                 return JsonResponse({'error': 'Palavra não fornecida'}, status=400)
+            
+            # Salvar busca no banco
+            user_ip = request.META.get('REMOTE_ADDR')
+            search = WordSearch.objects.create(
+                word=word,
+                user_ip=user_ip
+            )
             
             # Configurar Gemini AI
             api_key = os.environ.get('GOOGLE_AI_API_KEY')
@@ -56,6 +65,13 @@ def analyze_word(request):
                 
                 analysis = json.loads(response_text)
                 analysis['status'] = 'completed'
+                
+                # Salvar resultado no banco
+                EtymologyResult.objects.create(
+                    word=word,
+                    result_data=analysis,
+                    search=search
+                )
                 
                 return JsonResponse({
                     'success': True,
