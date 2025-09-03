@@ -193,6 +193,7 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://veritas-radix-deploy-test.vercel.app",
     "https://veritas-radix.vercel.app",
     "https://veritas-radix-frontend.vercel.app",
 ]
