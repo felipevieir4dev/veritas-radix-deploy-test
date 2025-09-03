@@ -47,11 +47,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    'apps.core',
-    'apps.etymology',
-    # 'apps.authentication',
-    # 'apps.challenges', 
-    # 'apps.analytics',
+    # Todos os apps removidos temporariamente
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
