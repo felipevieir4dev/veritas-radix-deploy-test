@@ -1,86 +1,66 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-import google.generativeai as genai
-from django.conf import settings
+import os
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 import json
 
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def analyze_etymology(request):
-    """Analyze word etymology using Gemini API."""
-    word = request.data.get('word')
-    
-    if not word:
-        return Response(
-            {'error': 'Word parameter required'}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    try:
-        # Configure Gemini
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-pro')
-        
-        prompt = f"""
-        Analise a etimologia da palavra "{word}" em português, fornecendo:
-        1. Origem e evolução histórica
-        2. Raízes linguísticas (latim, grego, etc.)
-        3. Morfologia (prefixos, radicais, sufixos)
-        4. Palavras relacionadas
-        5. Significado atual e evolução semântica
-        
-        Formate a resposta como JSON com as chaves: origem, raizes, morfologia, relacionadas, significado.
-        """
-        
-        response = model.generate_content(prompt)
-        
-        # Try to parse as JSON, fallback to structured text
+@csrf_exempt
+def analyze_word(request):
+    """Análise etimológica básica de uma palavra"""
+    if request.method == 'POST':
         try:
-            analysis = json.loads(response.text)
-        except:
-            analysis = {
-                'origem': 'Análise disponível',
-                'raizes': response.text[:200] + '...',
-                'morfologia': 'Análise morfológica em desenvolvimento',
-                'relacionadas': ['palavras', 'relacionadas'],
-                'significado': 'Significado atual da palavra'
+            data = json.loads(request.body)
+            word = data.get('word', '').strip().lower()
+            
+            if not word:
+                return JsonResponse({'error': 'Palavra não fornecida'}, status=400)
+            
+            # Simulação básica de análise etimológica
+            mock_analysis = {
+                'word': word,
+                'original_language': 'Latim',
+                'original_form': f'{word}us',
+                'etymology_explanation': f'A palavra "{word}" tem origem no latim clássico.',
+                'prefix': word[:2] if len(word) > 3 else '',
+                'root': word[2:-1] if len(word) > 3 else word,
+                'suffix': word[-1:] if len(word) > 3 else '',
+                'modern_usage': f'Atualmente "{word}" é usado em contextos diversos.',
+                'related_words': [f'{word}ção', f'{word}ar', f'{word}ismo'],
+                'confidence_score': 0.85,
+                'status': 'completed'
             }
-        
-        return Response({
-            'word': word,
-            'analysis': analysis
-        })
-        
-    except Exception as e:
-        return Response(
-            {'error': f'Error analyzing word: {str(e)}'}, 
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+            
+            return JsonResponse({
+                'success': True,
+                'analysis': mock_analysis,
+                'message': 'Análise concluída (versão de teste)'
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'JSON inválido'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Método não permitido'}, status=405)
 
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def featured_words(request):
-    """Get featured words for the day."""
-    words = [
+def word_search(request):
+    """Busca de palavras"""
+    query = request.GET.get('q', '').strip()
+    
+    if not query:
+        return JsonResponse({'results': [], 'message': 'Digite uma palavra para buscar'})
+    
+    # Simulação de resultados
+    mock_results = [
         {
-            'word': 'filosofia',
-            'origin': 'Do grego φιλοσοφία (philosophia)',
-            'meaning': 'Amor à sabedoria'
-        },
-        {
-            'word': 'democracia',
-            'origin': 'Do grego δημοκρατία (demokratia)',
-            'meaning': 'Governo do povo'
-        },
-        {
-            'word': 'biblioteca',
-            'origin': 'Do grego βιβλιοθήκη (bibliotheke)',
-            'meaning': 'Depósito de livros'
+            'word': query,
+            'definition': f'Definição da palavra "{query}"',
+            'language': 'Português',
+            'difficulty': 'intermediate'
         }
     ]
     
-    return Response({'featured_words': words})
+    return JsonResponse({
+        'results': mock_results,
+        'total': len(mock_results),
+        'query': query
+    })
