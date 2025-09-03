@@ -5,15 +5,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import JsonResponse
-
-def health_check(request):
-    return JsonResponse({'status': 'ok', 'message': 'Veritas Radix API is running'})
+from apps.core.views import health_check, test_apis
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('apps.authentication.urls')),
     path('api/etymology/', include('apps.etymology.urls')),
+    path('test-apis/', test_apis, name='test-apis'),
     path('', health_check, name='health-check'),
 ]
 
