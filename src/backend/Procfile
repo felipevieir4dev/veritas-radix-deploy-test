@@ -1,0 +1,1 @@
+web: gunicorn veritas_radix.wsgi:application
