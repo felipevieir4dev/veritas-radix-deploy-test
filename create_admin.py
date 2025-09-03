@@ -1,27 +1,15 @@
 #!/usr/bin/env python
-"""
-Script para criar superusuário do Django no Render
-"""
 import os
-import sys
 import django
+from django.core.management import execute_from_command_line
 
-# Configurar Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'veritas_radix.settings')
-sys.path.append('/opt/render/project/src/src/backend')
 django.setup()
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 
-User = get_user_model()
-
-# Criar superusuário se não existir
 if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser(
-        username='admin',
-        email='admin@veritasradix.com',
-        password='admin123'
-    )
-    print("Superusuário criado: admin / admin123")
+    User.objects.create_superuser('admin', 'admin@test.com', 'admin123')
+    print("Admin criado: admin/admin123")
 else:
-    print("Superusuário já existe")
+    print("Admin já existe")

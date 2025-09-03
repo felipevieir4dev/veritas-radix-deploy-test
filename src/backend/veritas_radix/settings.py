@@ -261,8 +261,8 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     X_FRAME_OPTIONS = 'DENY'
 
-# Custom user model
-AUTH_USER_MODEL = 'authentication.User'
+# Custom user model (comentado temporariamente)
+# AUTH_USER_MODEL = 'authentication.User'
 
 # Cache timeout settings
 CACHE_TTL = {
