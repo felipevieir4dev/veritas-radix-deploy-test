@@ -2,5 +2,5 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # URLs básicas de etimologia
+    # URLs básicas de autenticação
 ]

@@ -5,38 +5,18 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from rest_framework.routers import DefaultRouter
-from apps.core.views import HealthCheckView
+from django.http import JsonResponse
 
-# Main router for API
-router = DefaultRouter()
+def health_check(request):
+    return JsonResponse({'status': 'ok', 'message': 'Veritas Radix API is running'})
 
 urlpatterns = [
-    # Admin
     path('admin/', admin.site.urls),
-    
-    # Health check
-    path('health/', HealthCheckView.as_view(), name='health-check'),
-    
-    # API routes
-    path('api/v1/', include([
-        path('auth/', include('apps.authentication.urls')),
-        path('etymology/', include('apps.etymology.urls')),
-        path('challenges/', include('apps.challenges.urls')),
-        path('analytics/', include('apps.analytics.urls')),
-        path('', include(router.urls)),
-    ])),
-    
-    # API documentation
-    path('api/docs/', include('rest_framework.urls')),
+    path('auth/', include('apps.authentication.urls')),
+    path('api/etymology/', include('apps.etymology.urls')),
+    path('', health_check, name='health-check'),
 ]
 
-# Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
-# Customize admin
-admin.site.site_header = "Veritas Radix Admin"
-admin.site.site_title = "Veritas Radix"
-admin.site.index_title = "Administração do Sistema"
