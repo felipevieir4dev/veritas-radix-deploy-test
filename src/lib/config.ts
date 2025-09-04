@@ -1,9 +1,7 @@
-import { ENV_CONFIG } from './env';
-
 // Configuração da API
 export const API_CONFIG = {
   // URL base da API
-  BASE_URL: ENV_CONFIG.API_URL,
+  BASE_URL: process.env.VITE_API_URL || 'https://veritas-radix-deploy-test.onrender.com',
   
   // Endpoints
   ENDPOINTS: {
