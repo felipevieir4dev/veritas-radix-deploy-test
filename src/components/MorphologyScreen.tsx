@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, TreePine, Brain, Sparkles, Eye, Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight, TreePine, Brain, Sparkles, Eye, Star, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { EtymologyImage } from './EtymologyImage';
@@ -14,8 +14,47 @@ export function MorphologyScreen({ word, onChallengeStart }: MorphologyScreenPro
   const [showImage, setShowImage] = useState(true);
   const [useDallE, setUseDallE] = useState(false);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   
   const { addXP, unlockAchievement, studentStats, updateStreak } = useGamification();
+
+  // Buscar análise da IA quando a palavra mudar
+  useEffect(() => {
+    const fetchEtymology = async () => {
+      if (!word) return;
+      
+      setLoading(true);
+      setError(null);
+      setAiResult(null);
+      
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://veritas-radix-deploy-test.onrender.com'}/api/etymology/analyze/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ word }),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Erro ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        setAiResult(data);
+        
+      } catch (err: any) {
+        console.error('Erro na busca:', err);
+        setError('Erro ao buscar análise etimológica');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchEtymology();
+  }, [word]);
 
   // Adicionar XP quando a palavra é analisada
   useEffect(() => {
@@ -93,8 +132,54 @@ export function MorphologyScreen({ word, onChallengeStart }: MorphologyScreenPro
     }
   };
 
-  const currentWord = morphologyData[word as keyof typeof morphologyData];
+  // Usar dados da IA se disponíveis, senão usar dados estáticos
+  const currentWord = aiResult?.success && aiResult?.analysis 
+    ? {
+        origin: `${aiResult.analysis.original_language || 'Origem desconhecida'}`,
+        prefix: { text: aiResult.analysis.prefix || '', meaning: 'Prefixo' },
+        root: { text: aiResult.analysis.root || word, meaning: 'Raiz principal' },
+        suffix: { text: aiResult.analysis.suffix || '', meaning: 'Sufixo' },
+        completeMeaning: aiResult.analysis.etymology_explanation || `Análise da palavra "${word}".`,
+        etymology: aiResult.analysis.etymology_explanation || `Etimologia de "${word}".`
+      }
+    : morphologyData[word as keyof typeof morphologyData];
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen p-4 sm:p-6 pb-24 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-[var(--color-deep-red)] mx-auto mb-4" />
+          <h2 className="font-display text-deep-red mb-2">Analisando "{word}"</h2>
+          <p className="text-sepia font-body">Consultando IA para análise etimológica...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen p-4 sm:p-6 pb-24">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center">
+            <h1 className="font-display text-deep-red mb-4">Erro na Análise</h1>
+            <div className="parchment-card p-8">
+              <p className="text-red-600 font-body mb-4">{error}</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="btn-primary"
+              >
+                Tentar Novamente
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No data state
   if (!currentWord) {
     return (
       <div className="min-h-screen p-4 sm:p-6 pb-24">
@@ -103,11 +188,17 @@ export function MorphologyScreen({ word, onChallengeStart }: MorphologyScreenPro
             <h1 className="font-display text-deep-red mb-4">Análise Morfológica</h1>
             <div className="parchment-card p-8">
               <p className="text-sepia font-body mb-4">
-                A análise morfológica de "<strong>{word}</strong>" ainda não está disponível em nossa base de dados.
+                Não foi possível analisar "<strong>{word}</strong>".
               </p>
-              <p className="text-aged font-body text-sm">
-                Esta palavra será analisada e adicionada em breve ao nosso catálogo etimológico.
+              <p className="text-aged font-body text-sm mb-4">
+                {aiResult?.message || 'Tente novamente ou escolha outra palavra.'}
               </p>
+              <Button 
+                onClick={() => window.history.back()} 
+                className="btn-primary"
+              >
+                Voltar
+              </Button>
             </div>
           </div>
         </div>

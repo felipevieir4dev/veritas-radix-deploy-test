@@ -46,9 +46,10 @@ export function MainScreen({ onWordSelect }: MainScreenProps) {
     }
   ];
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
+      // Ir direto para a tela de morfologia com a palavra
       onWordSelect(searchTerm.trim());
     }
   };
